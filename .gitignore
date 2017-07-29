@@ -4,3 +4,6 @@
 # data and result
 data/
 result/
+
+model_py/.ipynb_checkpoints/
+.DS_Store
