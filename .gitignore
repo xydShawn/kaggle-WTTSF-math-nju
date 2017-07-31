@@ -5,5 +5,8 @@
 data/
 result/
 
+# python
+__pycache__/
+model_py/__pycache__/
 model_py/.ipynb_checkpoints/
 .DS_Store

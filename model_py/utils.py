@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import csv
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from tqdm import tqdm
 
 
 
@@ -29,7 +31,7 @@ def generate_submission_2(result):
 
     if temp.shape != (page_num, days):
         print('to do')
-        break
+        return
 
     with open(filename, 'wb') as csv_file:
         writer = csv.writer(csv_file)
@@ -39,8 +41,8 @@ def generate_submission_2(result):
             writer.writerow([sub_res[i, 0], value])
 
 def generate_submission_1(result):
-    submission_result = pd.read_csv('./data/sample_submission_1.csv')
-    map_pos = pd.read_csv('./tmp/map_pos.csv').values
+    submission_result = pd.read_csv('../data/sample_submission_1.csv')
+    map_pos = pd.read_csv('../tmp/map_pos.csv').values
     days = 60
     page_num = len(submission_result) // days
 
@@ -52,8 +54,10 @@ def generate_submission_1(result):
         print('to do')
 
     if temp.shape == (page_num, days):
-        for i in range(len(submission_result)):
-            submission_result.loc[i, 'Visits'] = temp[map_pos[i, 0], map_pos[i, 1]]
+        visits = np.zeros((len(submission_result), 1))
+        for i in tqdm(range(len(submission_result))):
+            visits[i] = temp[map_pos[i, 0], map_pos[i, 1]]
+        submission_result['Visits'] = visits
         ttime = datetime.now()
         time2str = strc(ttime.month) + strc(ttime.day) + strc(ttime.hour) + strc(ttime.minute)
         filename = '../result/submission_' + time2str + '.csv'
