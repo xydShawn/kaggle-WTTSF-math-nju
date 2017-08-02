@@ -7,10 +7,7 @@ from utils import *
 
 
 
-def stat_prediction(num_ttw, stat):
-    train_data = pd.read_csv('../data/train_1.csv')
-    print('fetch data')
-    
+def stat_prediction(num_ttw, stat, train_data):
     sub_columns = train_data.columns[-num_ttw:]
     sub_data = train_data[sub_columns]
     sub_data_pre = sub_data.fillna(0)
@@ -35,4 +32,14 @@ def stat_prediction(num_ttw, stat):
 
 num_ttw = 56
 stat = 'median'
-stat_prediction(num_ttw, stat)
+data_type = 'treated'
+if data_type == 'oringinal':
+    train_data = pd.read_csv('../data/train_1.csv')
+    print('fetch original data')
+elif data_type == 'treated':
+    train_data = pd.read_csv('../data/clean_NaN_nearest_int.csv', header=None)
+    print('fetch treated data')
+else:
+    print('to do')
+
+stat_prediction(num_ttw, stat, train_data)
