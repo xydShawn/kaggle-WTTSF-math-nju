@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 
 import csv
+import math
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -40,7 +41,8 @@ def generate_submission_2(result):
             value = result[map_pos[i, 0], map_pos[i, 1]]
             writer.writerow([sub_res[i, 0], value])
 
-def generate_submission_1(result):
+def generate_submission_1(result, **kwargs):
+    method = kwargs.get('method', 'original')
     submission_result = pd.read_csv('../data/sample_submission_1.csv')
     map_pos = pd.read_csv('../tmp/map_pos.csv').values
     days = 60
@@ -58,11 +60,17 @@ def generate_submission_1(result):
         for i in tqdm(range(len(submission_result))):
             visits[i] = temp[map_pos[i, 0], map_pos[i, 1]]
         submission_result['Visits'] = visits
+        if method == 'round':
+            submission_result['Visits'] = submission_result['Visits'].map(lambda x: round(x))
+        elif method == 'ceil':
+            submission_result['Visits'] = submission_result['Visits'].map(lambda x: math.ceil(x))
+        elif method == 'floor':
+            submission_result['Visits'] = submission_result['Visits'].map(lambda x: math.floor(x))
+        print(submission_result.dtypes)
         ttime = datetime.now()
         time2str = strc(ttime.month) + strc(ttime.day) + strc(ttime.hour) + strc(ttime.minute)
         filename = '../result/submission_' + time2str + '.csv'
         submission_result.to_csv(filename, index=False)
     else:
         print('to do')
-
     
