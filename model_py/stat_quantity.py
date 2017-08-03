@@ -30,6 +30,43 @@ def stat_prediction(num_ttw, stat, train_data):
 
     generate_submission_1(result)
 
+def stat_prediction_weekday(num_ttw, stat, train_data):
+    train_date = pd.read_csv('../tmp/train_date_class.csv').iloc[-num_ttw:]
+    test_date = pd.read_csv('../tmp/test_date_class.csv')
+    sub_columns_workday = (train_data.columns[-num_ttw:])[train_date.is_weekend == 0]
+    sub_columns_weekend = (train_data.columns[-num_ttw:])[train_date.is_weekend == 1]
+    print('length of workday: ', len(sub_columns_workday))
+    print('length of weekend: ', len(sub_columns_weekend))
+    sub_data_workday = train_data[sub_columns_workday]
+    sub_data_weekend = train_data[sub_columns_weekend]
+    print('shape of workday data: ', sub_data_workday.values.shape)
+    print('shape of weekend data: ', sub_data_weekend.values.shape)
+    sub_data_workday = sub_data_workday.fillna(0)
+    sub_data_weekend = sub_data_weekend.fillna(0)
+    print('preprocessing done')
+
+    result = np.zeros((len(train_data), 60))
+    if stat == 'median':
+        xx_workday = sub_data_workday.median(axis=1)
+        xx_weekend = sub_data_weekend.median(axis=1)
+    elif stat == 'mean':
+        xx_workday = sub_data_workday.median(axis=1)
+        xx_weekend = sub_data_weekend.median(axis=1)
+    else:
+        print('to do')
+        return
+
+    for i in range(60):
+        if test_date.loc[i, 'is_weekend'] == 1:
+            result[:, i] = xx_weekend
+        else:
+            result[:, i] = xx_workday
+    print('completing')
+    print('shape of result', result.shape)
+    print('type of result', result.dtype)
+
+    generate_submission_1(result)
+
 num_ttw = 56
 stat = 'median'
 data_type = 'treated'
@@ -42,4 +79,4 @@ elif data_type == 'treated':
 else:
     print('to do')
 
-stat_prediction(num_ttw, stat, train_data)
+stat_prediction_weekday(num_ttw, stat, train_data)
