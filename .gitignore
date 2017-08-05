@@ -9,4 +9,5 @@ result/
 __pycache__/
 model_py/__pycache__/
 model_py/.ipynb_checkpoints/
+model_py/utils.pyc
 .DS_Store
