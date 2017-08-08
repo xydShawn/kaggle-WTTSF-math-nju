@@ -102,6 +102,105 @@ def stat_prediction_day_by_day(num_ttw, stat, train_data):
     generate_submission_1(result)   
 
 
+def stat_prediction_last_year(num_ttw, stat, train_data):
+    ind = list(range(185, 244))
+    ind.append(245)
+    last_columns = train_data.columns[ind]
+    sub_columns = train_data.columns[-num_ttw:]
+    last_data = train_data[last_columns]
+    sub_data = train_data[sub_columns]
+    last_data = last_data.fillna(0)
+    sub_data = sub_data.fillna(0)
+    print('preprocessing done')
+
+    result = np.zeros((len(train_data), 60))
+
+    if stat == 'median':
+        xx = sub_data.median(axis=1).values.reshape(-1, 1)
+        yy = last_data.median(axis=1).values.reshape(-1, 1)
+        zz = (last_data.values - yy) / (yy + 1)
+        zz[zz > 2] = 2
+        result = zz * (xx + 1) + xx
+        result[result < 0] = 0
+    elif stat == 'mean':
+        xx = last_data.std(axis=1).values.reshape(-1, 1)
+        xx[xx == 0] = 0.1
+        yy = (last_data.values - last_data.values.mean(axis=1).reshape(-1, 1)) / xx
+        yy[yy > 1.5] = 1.5
+        yy[yy < -1.5] = -1.5
+        result = yy * sub_data.std(axis=1).values.reshape(-1, 1) + sub_data.values.mean(axis=1).reshape(-1, 1)
+    else:
+        print('to do')
+        return
+
+    print('completing')
+    print('shape of result', result.shape)
+
+    generate_submission_1(result)
+
+    
+def stat_prediction_weekend_modify_1(num_ttw, stat, train_data):
+    train_date = pd.read_csv('../tmp/train_date_class.csv').iloc[-num_ttw:]
+    test_date = pd.read_csv('../tmp/test_date_class.csv')
+    sub_columns_workday = (train_data.columns[-num_ttw:])[train_date.is_weekend == 0]
+    sub_columns_weekend = (train_data.columns[-num_ttw:])[train_date.is_weekend == 1]
+    print('length of workday: ', len(sub_columns_workday))
+    print('length of weekend: ', len(sub_columns_weekend))
+    sub_data_workday = train_data[sub_columns_workday]
+    sub_data_weekend = train_data[sub_columns_weekend]
+    print('shape of workday data: ', sub_data_workday.values.shape)
+    print('shape of weekend data: ', sub_data_weekend.values.shape)
+    sub_data_workday = sub_data_workday.fillna(0)
+    sub_data_weekend = sub_data_weekend.fillna(0)
+    print('preprocessing done')
+    sub_data_workday = sub_data_workday.values
+    sub_data_weekend = sub_data_weekend.values
+
+    result = np.zeros((len(train_data), 60))
+    if stat == 'median':
+        xx_workday = np.zeros(len(train_data))
+        xx_weekend = np.zeros(len(train_data))
+        for i in tqdm(range(len(train_data))):
+            ind1 = np.where(sub_data_workday[i] != 0)
+            if len(ind1[0]) == 0:
+                xx_workday[i] = 0
+            else:
+                xx_workday[i] = np.median(sub_data_workday[i, ind1[0][0]:])
+            ind2 = np.where(sub_data_weekend[i] != 0)
+            if len(ind2[0]) == 0:
+                xx_weekend[i] = 0
+            else:
+                xx_weekend[i] = np.median(sub_data_weekend[i, ind2[0][0]:])
+    elif stat == 'mean':
+        xx_workday = np.zeros(len(train_data))
+        xx_weekend = np.zeros(len(train_data))
+        for i in tqdm(range(len(train_data))):
+            ind1 = np.where(sub_data_workday[i] != 0)
+            if len(ind1[0]) == 0:
+                xx_workday[i] = 0
+            else:
+                xx_workday[i] = np.mean(sub_data_workday[i, ind1[0][0]:])
+            ind2 = np.where(sub_data_weekend[i] != 0)
+            if len(ind2[0]) == 0:
+                xx_weekend[i] = 0
+            else:
+                xx_weekend[i] = np.mean(sub_data_weekend[i, ind2[0][0]:])
+    else:
+        print('to do')
+        return
+
+    for i in range(60):
+        if test_date.loc[i, 'is_weekend'] == 1:
+            result[:, i] = xx_weekend
+        else:
+            result[:, i] = xx_workday
+    print('completing')
+    print('shape of result', result.shape)
+    print('type of result', result.dtype)
+
+    generate_submission_1(result)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-n', '--num', help='length of time window, default=56', default=56, type=int)
 parser.add_argument('-s', '--stat', help='choose statistics, default: median', default='median', type=str)
@@ -133,5 +232,9 @@ elif method == 1:
     stat_prediction_weekend(num_ttw, stat, train_data)
 elif method == 2:
     stat_prediction_day_by_day(num_ttw, stat, train_data)
+elif method == 3:
+    stat_prediction_last_year(num_ttw, stat, train_data)
+elif method == 4:
+    stat_prediction_weekend_modify_1(num_ttw, stat, train_data)
 else:
     print('to do')
