@@ -66,10 +66,10 @@ def stat_prediction_weekend(data, train_ttw, pred_ttw, stat_func, train_weekend,
 
 
 def stat_prediction_day_by_day(data, train_ttw, pred_ttw, stat_func, train_weekday, test_weekday):
-    train_weekday = train_weekday[-num_ttw:]
+    train_weekday = train_weekday[-train_ttw:]
     sub_data = dict()
     for i in range(7):
-        sub_data[i] = data[:, -num_ttw:][:, train_weekday==i]
+        sub_data[i] = data[:, -train_ttw:][:, train_weekday==i]
         print('shape of data of weekday %d: %s' % (i + 1, str(sub_data[i].shape)))
 
     result = np.zeros((len(data), pred_ttw))
@@ -88,7 +88,6 @@ def stat_prediction_day_by_day(data, train_ttw, pred_ttw, stat_func, train_weekd
     return result
 
 '''
-'''
 # ts_result = pd.read_csv('../result/ts_for_all_490.csv', header=None).values
 # prophet_result = pd.read_csv('../result/prophet_for_all_490.csv', header=None).values
 total_data = pd.read_csv('../data/clean_NaN_linear_2.csv', header=None)
@@ -103,7 +102,7 @@ test_weekend = temp_date.iloc[-62:]['is_weekend'].values
 train_weekday = temp_date.iloc[:-62]['weekday'].values
 test_weekday = temp_date.iloc[-62:]['weekday'].values
 '''
-'''
+
 
 '''
 pred_result = dict()
@@ -128,6 +127,8 @@ comb = (pred_result[2] + pred_result[6]) / 2
 print(cost(real_result, comb))
 '''
 
+
+'''
 ttw = [11, 18, 30, 48, 126, 203, 329]
 pred_result_1 = np.zeros((len(ttw), len(train_data), 62))
 pred_result_2 = np.zeros((len(ttw), len(train_data), 62))
@@ -161,8 +162,9 @@ print('cost of combined result 1: %f' % (cost(real_result, comb_1)))
 comb_2 = result_1 * 0.35 + result_2 * 0.35 + result_3 * 0.2 + result_4 * 0.1
 comb_2 = np.floor(comb_2)
 print('cost of combined result 2: %f' % (cost(real_result, comb_2)))
+'''
 
-
+'''
 '''
 total_data = pd.read_csv('../data/clean_NaN_linear_2.csv', header=None)
 total_data = total_data.fillna(0)
@@ -176,10 +178,14 @@ train_weekday = train_date['weekday'].values
 test_weekday = test_date['weekday'].values
 
 ttw = [11, 18, 30, 48, 126, 203, 329]
-pred_result = np.zeros((len(ttw), len(train_data), 62))
+pred_result_1 = np.zeros((len(ttw), len(train_data), 62))
+pred_result_2 = np.zeros((len(ttw), len(train_data), 62))
 for i, t in enumerate(ttw):
-    pred_result[i] = stat_prediction_weekend(train_data, t, 62, np.median, train_weekend, test_weekend)
-result = np.median(pred_result, axis=0)
-print(result.shape)
-generate_submission_3(result, method='comb')
+    pred_result_1[i] = stat_prediction_all(train_data, t, 62, np.median)
+    pred_result_2[i] = stat_prediction_weekend(train_data, t, 62, np.median, train_weekend, test_weekend)
+result_1 = np.floor(np.median(pred_result_1, axis=0))
+result_2 = np.floor(np.median(pred_result_2, axis=0))
+comb = result_1 * 0.4 + result_2 * 0.6
+generate_submission_3(comb, method='floor')
+'''
 '''
