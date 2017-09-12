@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from utils import *
 
 def cost(real, pred):
     loss = 0
@@ -86,7 +87,8 @@ def stat_prediction_day_by_day(data, train_ttw, pred_ttw, stat_func, train_weekd
         result[:, i] = xx[test_weekday[i]]
     return result
 
-
+'''
+'''
 # ts_result = pd.read_csv('../result/ts_for_all_490.csv', header=None).values
 # prophet_result = pd.read_csv('../result/prophet_for_all_490.csv', header=None).values
 total_data = pd.read_csv('../data/clean_NaN_linear_2.csv', header=None)
@@ -100,6 +102,8 @@ train_weekend = temp_date.iloc[:-62]['is_weekend'].values
 test_weekend = temp_date.iloc[-62:]['is_weekend'].values
 train_weekday = temp_date.iloc[:-62]['weekday'].values
 test_weekday = temp_date.iloc[-62:]['weekday'].values
+'''
+'''
 
 '''
 pred_result = dict()
@@ -124,24 +128,58 @@ comb = (pred_result[2] + pred_result[6]) / 2
 print(cost(real_result, comb))
 '''
 
-pred_result = np.zeros((7, len(train_data), 62))
 ttw = [11, 18, 30, 48, 126, 203, 329]
+pred_result_1 = np.zeros((len(ttw), len(train_data), 62))
+pred_result_2 = np.zeros((len(ttw), len(train_data), 62))
 print(ttw)
 for i, t in enumerate(ttw):
-    pred_result[i] = stat_prediction_weekend(train_data, t, 62, np.median, train_weekend, test_weekend)
+    pred_result_1[i] = stat_prediction_all(train_data, t, 62, np.median)
+    pred_result_2[i] = stat_prediction_weekend(train_data, t, 62, np.median, train_weekend, test_weekend)
 
-result_1 = np.median(pred_result, axis=0)
+result_1 = np.floor(np.median(pred_result_1, axis=0))
+result_2 = np.floor(np.median(pred_result_2, axis=0))
 print(result_1.shape)
-print('cost of result_1: %f' % (cost(real_result, result_1)))
-
-result_2 = stat_prediction_weekend(train_data, 49, 62, np.median, train_weekend, test_weekend)
 print(result_2.shape)
+print('cost of result_1: %f' % (cost(real_result, result_1)))
 print('cost of result_2: %f' % (cost(real_result, result_2)))
 
-result_3 = stat_prediction_all(train_data, 56, 62, np.median)
+
+result_3 = stat_prediction_weekend(train_data, 49, 62, np.median, train_weekend, test_weekend)
+result_3 = np.floor(result_3)
 print(result_3.shape)
 print('cost of result_3: %f' % (cost(real_result, result_3)))
 
-comb = result_1 * 0.5 + result_2 * 0.3 + result_2 * 0.2
-comb = np.round(comb)
-print('cost of combined result: %f' % (cost(real_result, comb)))
+result_4 = stat_prediction_all(train_data, 56, 62, np.median)
+result_4 = np.floor(result_4)
+print(result_4.shape)
+print('cost of result_4: %f' % (cost(real_result, result_4)))
+
+comb_1 = result_1 * 0.5 + result_2 * 0.5
+comb_1 = np.floor(comb_1)
+print('cost of combined result 1: %f' % (cost(real_result, comb_1)))
+
+comb_2 = result_1 * 0.35 + result_2 * 0.35 + result_3 * 0.2 + result_4 * 0.1
+comb_2 = np.floor(comb_2)
+print('cost of combined result 2: %f' % (cost(real_result, comb_2)))
+
+
+'''
+total_data = pd.read_csv('../data/clean_NaN_linear_2.csv', header=None)
+total_data = total_data.fillna(0)
+train_data = total_data.values
+
+train_date = pd.read_csv('../tmp/train_date_class_2.csv')
+test_date = pd.read_csv('../tmp/test_date_class_2.csv')
+train_weekend = train_date['is_weekend'].values
+test_weekend = test_date['is_weekend'].values
+train_weekday = train_date['weekday'].values
+test_weekday = test_date['weekday'].values
+
+ttw = [11, 18, 30, 48, 126, 203, 329]
+pred_result = np.zeros((len(ttw), len(train_data), 62))
+for i, t in enumerate(ttw):
+    pred_result[i] = stat_prediction_weekend(train_data, t, 62, np.median, train_weekend, test_weekend)
+result = np.median(pred_result, axis=0)
+print(result.shape)
+generate_submission_3(result, method='comb')
+'''

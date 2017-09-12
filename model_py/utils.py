@@ -73,4 +73,40 @@ def generate_submission_1(result, **kwargs):
         submission_result.to_csv(filename, index=False)
     else:
         print('to do')
+
+
+def generate_submission_3(result, **kwargs):
+    method = kwargs.get('method', 'original')
+    submission_result = pd.read_csv('../data/sample_submission_2.csv')
+    map_pos = pd.read_csv('../tmp/map_pos_2.csv').values
+    days = 62
+    page_num = len(submission_result) // days
+
+    if isinstance(result, pd.DataFrame):
+        temp = result.values
+    elif isinstance(result, np.ndarray):
+        temp = result
+    else:
+        print('to do')
+
+    if temp.shape == (page_num, days):
+        visits = np.zeros((len(submission_result), 1))
+        for i in tqdm(range(len(submission_result))):
+            visits[i] = temp[map_pos[i, 0], map_pos[i, 1]]
+        submission_result['Visits'] = visits
+        if method == 'round':
+            submission_result['Visits'] = submission_result['Visits'].map(lambda x: round(x))
+        elif method == 'ceil':
+            submission_result['Visits'] = submission_result['Visits'].map(lambda x: math.ceil(x))
+        elif method == 'floor':
+            submission_result['Visits'] = submission_result['Visits'].map(lambda x: math.floor(x))
+        elif method == 'comb':
+            submission_result['Visits'] = submission_result['Visits'].map(lambda x: math.ceil(x) if x >= 1 else round(x))
+        print(submission_result.dtypes)
+        ttime = datetime.now()
+        time2str = strc(ttime.month) + strc(ttime.day) + strc(ttime.hour) + strc(ttime.minute)
+        filename = '../result/submission_' + time2str + '.csv'
+        submission_result.to_csv(filename, index=False)
+    else:
+        print('to do')
     
